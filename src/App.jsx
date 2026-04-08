@@ -1,119 +1,113 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "./api/axios";
 
 function App() {
-  const [data, setData] = useState({});
-  const [location, setLocation] = useState("");
+  const [data, setData] = useState(null);
+  const [query, setQuery] = useState("");
 
   const API_KEY = import.meta.env.VITE_WEATHER_KEY;
 
-  useEffect(() => {
-    const savedCity = localStorage.getItem("city");
-    if (savedCity) {
-      fetchWeather(savedCity);
-    }
-  }, []);
-
   const fetchWeather = async (city) => {
     try {
-      const response = await axios.get(
+      const res = await axios.get(
         `/weather?q=${city}&units=metric&appid=${API_KEY}`
       );
-      setData(response.data);
-
-      localStorage.setItem("city", city);
-    } catch (error) {
-      console.log(error.response);
-      alert("Kota tidak ditemukan!");
+      setData(res.data);
+    } catch {
+      alert("Kota tidak ditemukan");
     }
   };
 
-  const searchLocation = (event) => {
-    if (event.key === "Enter") {
-      if (!location) return;
-
-      fetchWeather(location);
-      setLocation("");
+  const handleSearch = (e) => {
+    if (e.key === "Enter" && query) {
+      fetchWeather(query);
+      setQuery("");
     }
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#0f172a,_#020617)] text-white flex flex-col items-center pt-24 px-4">
+    <div className="w-full h-screen text-white relative overflow-hidden font-sans">
 
-      <h1 className="text-4xl font-extrabold mb-6 bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-500 text-transparent bg-clip-text tracking-wide drop-shadow-lg">
-        Weather App
-      </h1>
+      {/* BACKGROUND GRADIENT */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#020617] to-black" />
 
-      <div className="w-full max-w-md">
+      {/* BLUR LIGHT EFFECT */}
+      <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-500/20 blur-[120px] rounded-full" />
+
+      {/* SEARCH */}
+      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[90%] max-w-xl z-10">
         <input
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          onKeyDown={searchLocation}
-          placeholder="Cari kota..."
-          className="w-full p-4 rounded-full bg-white/5 border border-white/10 
-          focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500 
-          outline-none transition-all backdrop-blur-lg 
-          placeholder:text-gray-400 shadow-[0_0_20px_rgba(0,255,255,0.1)]"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleSearch}
+          placeholder="Search city..."
+          className="w-full p-4 rounded-3xl 
+          bg-white/10 backdrop-blur-xl
+          border border-white/20
+          text-white placeholder-white/60
+          focus:outline-none"
         />
       </div>
 
-      {data.name && (
-        <div className="mt-10 w-full max-w-md bg-white/5 p-8 rounded-3xl 
-        border border-white/10 backdrop-blur-2xl shadow-[0_0_40px_rgba(0,0,0,0.6)] 
-        text-center transition-all duration-500 hover:scale-105">
+      {/* CONTENT */}
+      {data ? (
+        <div className="flex flex-col items-center justify-center h-full z-10 relative">
 
-          <h1 className="text-2xl font-semibold tracking-wide text-gray-200">
-            📍 {data.name}
-          </h1>
-
-          <div className="mt-6">
-            <h2 className="text-7xl font-extrabold bg-gradient-to-r from-cyan-300 via-blue-400 to-indigo-500 bg-clip-text text-transparent drop-shadow-lg">
-              {data.main?.temp.toFixed()}°C
-            </h2>
+          {/* MINI INFO TOP */}
+          <div className="absolute top-24 right-10 px-4 py-2 rounded-2xl 
+          bg-white/10 backdrop-blur-xl border border-white/20 text-sm">
+            {data.main.temp.toFixed()}° • {data.weather[0].main}
           </div>
 
-          <p className="mt-3 text-lg text-cyan-300 uppercase tracking-widest">
-            {data.weather?.[0]?.main}
-          </p>
+          {/* MAIN CARD */}
+          <div className="p-10 rounded-[30px] 
+          bg-white/10 backdrop-blur-2xl
+          border border-white/20 shadow-2xl w-[90%] max-w-md text-center">
 
-          {data.weather && (
+            {/* LOCATION */}
+            <h2 className="text-xl font-semibold mb-2">
+              {data.name}, {data.sys.country}
+            </h2>
+
+            {/* ICON */}
             <img
-              src={`https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`}
-              alt="weather icon"
-              className="mx-auto mt-2 scale-110 drop-shadow-[0_0_15px_rgba(0,255,255,0.5)]"
+              src={`https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`}
+              alt="weather"
+              className="mx-auto"
             />
-          )}
 
-          <div className="flex justify-between mt-8 gap-4">
+            {/* TEMP */}
+            <p className="text-6xl font-bold">
+              {data.main.temp.toFixed()}°
+            </p>
 
-            <div className="flex-1 bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-md">
-              <p className="text-gray-400 text-xs uppercase tracking-wider">
-                💧 Humidity
-              </p>
-              <p className="font-bold text-xl mt-1 text-cyan-300">
-                {data.main?.humidity}%
-              </p>
-            </div>
+            <p className="text-white/70 capitalize mb-6">
+              {data.weather[0].description}
+            </p>
 
-            <div className="flex-1 bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-md">
-              <p className="text-gray-400 text-xs uppercase tracking-wider">
-                🌬 Wind
-              </p>
-              <p className="font-bold text-xl mt-1 text-cyan-300">
-                {data.wind?.speed} MPH
-              </p>
+            {/* DETAILS */}
+            <div className="grid grid-cols-3 gap-3 text-sm">
+              <div className="p-3 rounded-xl bg-white/10">
+                {data.main.humidity}%
+                <p className="text-xs text-white/60">Humidity</p>
+              </div>
+              <div className="p-3 rounded-xl bg-white/10">
+                {data.wind.speed}
+                <p className="text-xs text-white/60">Wind</p>
+              </div>
+              <div className="p-3 rounded-xl bg-white/10">
+                {data.main.pressure}
+                <p className="text-xs text-white/60">Pressure</p>
+              </div>
             </div>
 
           </div>
         </div>
+      ) : (
+        <div className="flex items-center justify-center h-full text-white/40">
+          Cari kota dulu 👀
+        </div>
       )}
-
-      {!data.name && (
-        <p className="text-gray-500 mt-10 animate-pulse">
-          🌍 Cari kota dulu bro...
-        </p>
-      )}
-
     </div>
   );
 }
