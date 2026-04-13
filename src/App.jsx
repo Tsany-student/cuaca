@@ -105,7 +105,7 @@ function App() {
         </div>
       ) : (
         <div className="flex items-center justify-center h-full text-white/40">
-          Cari kota dulu 👀
+          Cari dulu kotanya
         </div>
       )}
     </div>
